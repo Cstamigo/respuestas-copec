@@ -12,15 +12,20 @@ export default function RespuestaAutomatica() {
     const patente = texto.match(/patente(?:\s*asociada\s*es)?\s*([a-z]{4,6}-\d{1,2})/i)?.[1] || "";
     const rut = texto.match(/(?:rut\s*(?:de\s*la\s*empresa)?\s*:?\s*)(\d{1,2}\.\d{3}\.\d{3}-\d|\d{7,8}-\dk?)/i)?.[1] || "";
 
+    const mencionaNoRecibida = texto.includes("no hemos recibido la tarjeta")
+      || texto.includes("aún no hemos recibido la tarjeta")
+      || texto.includes("no ha llegado la tarjeta")
+      || texto.includes("no llega la tarjeta");
+
     // Tarjeta no recibida con datos completos
-    if (texto.includes("no hemos recibido la tarjeta") && folio && patente && rut) {
+    if (mencionaNoRecibida && folio && patente && rut) {
       setRespuesta(`Gracias por tu mensaje. Revisamos la solicitud con folio ${folio}, patente ${patente} y RUT ${rut}. Actualmente está en reparo.\n\nPara continuar, necesitamos que adjuntes el padrón del vehículo o certificado de 1ª inscripción, ya que debemos validar el tipo de vehículo según indica el área resolutora.`);
       return;
     }
 
     // Tarjeta no recibida con datos incompletos
-    if (texto.includes("no hemos recibido la tarjeta")) {
-      setRespuesta("Gracias por tu mensaje. ¡Podrías confirmarme el folio de solicitud, la patente asociada y el RUT de la empresa para revisar el estado?");
+    if (mencionaNoRecibida) {
+      setRespuesta("Gracias por tu mensaje. ¿Podrías confirmarme el folio de solicitud, la patente asociada y el RUT de la empresa para revisar el estado?");
       return;
     }
 
