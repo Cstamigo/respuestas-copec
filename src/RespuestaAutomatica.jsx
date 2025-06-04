@@ -7,23 +7,23 @@ export default function RespuestaAutomatica() {
   const generarRespuesta = () => {
     const texto = input.toLowerCase();
 
-    // Detectar folio, patente y RUT
+    // Extraer folio, patente y RUT con expresiones regulares
     const folio = texto.match(/folio\s(?:nº\s*)?(\d{9})/)?.[1] || "";
     const patente = texto.match(/patente(?:\s*asociada\s*es)?\s*([a-z]{4,6}-\d{1,2})/i)?.[1] || "";
     const rut = texto.match(/(?:rut\s*(?:de\s*la\s*empresa)?\s*:?\s*)(\d{1,2}\.\d{3}\.\d{3}-\d|\d{7,8}-\dk?)/i)?.[1] || "";
 
-    const mencionaNoRecibida = texto.includes("no hemos recibido la tarjeta")
-      || texto.includes("aún no hemos recibido la tarjeta")
-      || texto.includes("no ha llegado la tarjeta")
-      || texto.includes("no llega la tarjeta");
+    // Detectar si habla de tarjeta no recibida
+    const mencionaNoRecibida = /no\s*(ha|hemos)\s*(recibido|llegado).*tarjeta/.test(texto);
 
-    // Tarjeta no recibida con datos completos
+    // Caso completo: tarjeta no recibida con folio + patente + rut
     if (mencionaNoRecibida && folio && patente && rut) {
-      setRespuesta(`Gracias por tu mensaje. Revisamos la solicitud con folio ${folio}, patente ${patente} y RUT ${rut}. Actualmente está en reparo.\n\nPara continuar, necesitamos que adjuntes el padrón del vehículo o certificado de 1ª inscripción, ya que debemos validar el tipo de vehículo según indica el área resolutora.`);
+      setRespuesta(`Gracias por tu mensaje. Revisamos la solicitud con folio ${folio}, patente ${patente} y RUT ${rut}. Actualmente está en reparo.
+
+Para continuar, necesitamos que adjuntes el padrón del vehículo o certificado de 1ª inscripción, ya que debemos validar el tipo de vehículo según indica el área resolutora.`);
       return;
     }
 
-    // Tarjeta no recibida con datos incompletos
+    // Caso incompleto: tarjeta no recibida pero faltan datos
     if (mencionaNoRecibida) {
       setRespuesta("Gracias por tu mensaje. ¿Podrías confirmarme el folio de solicitud, la patente asociada y el RUT de la empresa para revisar el estado?");
       return;
@@ -35,13 +35,13 @@ export default function RespuestaAutomatica() {
       return;
     }
 
-    // Transferencia
+    // Transferencia de saldo
     if (texto.includes("transferir saldo") || texto.includes("cambiar")) {
       setRespuesta("Puedes realizar la transferencia entre productos ingresando a https://cupon.copec.cl con tu usuario administrador. Luego ve a \"Departamentos\" > \"Transferir\" y selecciona el saldo que deseas mover al tipo de combustible correspondiente.");
       return;
     }
 
-    // Mensaje por defecto
+    // Respuesta genérica
     setRespuesta("Gracias por tu mensaje. Por favor, cuéntame más detalles para poder ayudarte mejor.");
   };
 
