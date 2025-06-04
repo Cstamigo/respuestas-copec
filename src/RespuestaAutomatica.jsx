@@ -1,4 +1,4 @@
-// Paso 1: Área con nuevas condiciones para detectar solicitudes de tarjeta no recibida
+// ✅ Paso 1: Área con nuevas condiciones para detectar solicitudes de tarjeta no recibida
 import { useState } from "react";
 
 export default function RespuestaAutomatica() {
@@ -8,32 +8,37 @@ export default function RespuestaAutomatica() {
   const generarRespuesta = () => {
     const texto = input.toLowerCase();
 
-    // Extraer datos
-    const folio = texto.match(/(?:folio|número de solicitud)\s*(\d{6,})/i)?.[1] || "";
-    const patente = texto.match(/[a-z]{2,4}\d{2,4}|\b[a-z]{4}\d{2}\b|\b\w{6}\b/i)?.[0]?.toUpperCase() || "";
-    const rut = texto.match(/\b(\d{1,2}\.?\d{3}\.\d{3}-[\dkK])\b/)?.[1] || "";
+    // Extraer datos posibles
+    const folio = texto.match(/(?:folio|solicitud)[^\d]*(\d{9})/i)?.[1] || "";
+    const patente = texto.match(/\b([A-Z]{2,4}\d{2,4}|\w{6,8})\b/gi)?.find(p => /\d/.test(p)) || "";
+    const rut = texto.match(/\b(\d{1,2}\.\d{3}\.\d{3}-\d{1}|\d{8}-\d{1})\b/)?.[1] || "";
 
-    // Solicitud de tarjeta no recibida
+    // ✅ Solicitud de tarjeta no recibida
     if (
-      (texto.includes("no hemos recibido") || texto.includes("aún no llega") || texto.includes("no ha llegado")) &&
-      texto.includes("tarjeta")
+      texto.includes("no hemos recibido la tarjeta") ||
+      texto.includes("no nos ha llegado la tarjeta") ||
+      texto.includes("no llega la tarjeta") ||
+      texto.includes("no la hemos recibido") ||
+      texto.includes("aún no recibimos la tarjeta") ||
+      texto.includes("no ha sido entregada") ||
+      texto.includes("no se ha entregado")
     ) {
-      if (!folio || !patente || !rut) {
+      if (folio && patente && rut) {
         setRespuesta(
-          "Gracias por tu mensaje. ¿Podrías confirmarme el folio de la solicitud, la patente asociada y el RUT de la empresa para revisar el estado?"
+          `Gracias por tu mensaje. Revisamos la solicitud con folio ${folio}, patente ${patente} y el RUT ${rut}. Actualmente está en reparo. Para continuar, necesitamos que adjuntes el padrón del vehículo o certificado de 1° inscripción, ya que debemos validar el tipo de vehículo según indica el área resolutora.`
         );
       } else {
         setRespuesta(
-          `Gracias por tu mensaje. Revisamos la solicitud con folio ${folio}, patente ${patente} y RUT ${rut}. Actualmente está en reparo.\n\nPara continuar, necesitamos que adjunten el padrón del vehículo o certificado de 1° inscripción, ya que debemos validar el tipo de vehículo según indica el área resolutora.\n\nQuedo atento.`
+          `Gracias por tu mensaje. ¿Podrías confirmarme el folio de solicitud, la patente asociada y el RUT de la empresa para revisar el estado?`
         );
       }
       return;
     }
 
     // Solicitud de activación
-    if (texto.includes("activar") && texto.includes("tarjeta")) {
+    if (texto.includes("activar") || texto.includes("clave")) {
       setRespuesta(
-        "Gracias por escribirnos. Si ya eres cliente Copec, la tarjeta llegó al correo registrado. Si no te ha llegado, por favor indícanos tu RUT y correo para verificar."
+        `Gracias por escribirnos. Si ya eres cliente Copec, la tarjeta llegó al correo registrado. Si no te ha llegado, por favor indícanos tu RUT y correo para verificar.`
       );
       return;
     }
@@ -41,7 +46,7 @@ export default function RespuestaAutomatica() {
     // Transferencia de saldo
     if (texto.includes("transferir saldo") || texto.includes("cambiar")) {
       setRespuesta(
-        "Puedes realizar la transferencia entre productos ingresando a https://cupon.copec.cl con tu usuario administrador. Luego ve a 'Departamentos' > 'Transferir' y selecciona el saldo que deseas mover al tipo de combustible correspondiente."
+        `Puedes realizar la transferencia entre productos ingresando a https://cupon.copec.cl con tu usuario administrador. Luego ve a 'Departamentos' > 'Transferir' y selecciona el saldo que deseas mover al tipo de combustible correspondiente.`
       );
       return;
     }
@@ -51,13 +56,14 @@ export default function RespuestaAutomatica() {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Generador de Respuestas Copec 🛠️</h1>
       <textarea
         className="w-full p-2 border rounded mb-4"
         placeholder="Pega aquí la solicitud del cliente..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
+        rows={5}
       />
       <button
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -69,9 +75,9 @@ export default function RespuestaAutomatica() {
       {respuesta && (
         <div className="mt-6 p-4 bg-gray-100 rounded">
           <p className="font-semibold mb-2">Respuesta generada:</p>
-          <p>{respuesta}</p>
+          <p className="mb-2 whitespace-pre-wrap">{respuesta}</p>
           <button
-            className="mt-2 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
+            className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
             onClick={() => navigator.clipboard.writeText(respuesta)}
           >
             📋 Copiar
